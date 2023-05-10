@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -73,6 +73,9 @@ func createOvmsModelRepositoryFromDirectory(files []os.FileInfo, modelPath, sche
 
 	// allow the directory to contain version directories
 	// try to find the largest version directory
+
+	// TODO: Don't add version for mediapipe_graph format (might be temporary)
+
 	versionNumber := largestNumberDir(files)
 	if versionNumber != "" {
 		// found a version directory so step into it
