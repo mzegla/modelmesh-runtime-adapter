@@ -55,8 +55,8 @@ RUN set -eux; \
 
 # Install go protoc plugins
 ENV PATH /root/go/bin:$PATH
-RUN go get google.golang.org/protobuf/cmd/protoc-gen-go \
-           google.golang.org/grpc/cmd/protoc-gen-go-grpc
+RUN http_proxy=${http_proxy} https_proxy=${https_proxy} go get google.golang.org/protobuf/cmd/protoc-gen-go \
+        google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
 WORKDIR /opt/app
 
@@ -68,7 +68,7 @@ RUN git init && \
 
 # Download dependiencies before copying the source so they will be cached
 COPY go.mod go.sum ./
-RUN go mod download
+RUN http_proxy=${http_proxy} https_proxy=${https_proxy} go mod download
 
 
 ###############################################################################
