@@ -36,13 +36,14 @@ func adaptModelLayoutForRuntime(ctx context.Context, rootModelDir, modelID, mode
 		log.Error(err, "Unable to securely join", "rootModelDir", rootModelDir, "modelID", modelID)
 		return err
 	}
+
 	// clean up and then create directory where the rewritten model repo will live
 	if removeErr := os.RemoveAll(ovmsModelIDDir); removeErr != nil {
 		log.Info("Ignoring error trying to remove dir", "Directory", ovmsModelIDDir, "Error", removeErr)
 	}
-	if mkdirErr := os.MkdirAll(ovmsModelIDDir, 0755); mkdirErr != nil {
-		return fmt.Errorf("Error creating directories for path %s: %w", ovmsModelIDDir, mkdirErr)
-	}
+	//if mkdirErr := os.MkdirAll(ovmsModelIDDir, 0755); mkdirErr != nil {
+	//	return fmt.Errorf("Error creating directories for path %s: %w", ovmsModelIDDir, mkdirErr)
+	//}
 
 	modelPathInfo, err := os.Stat(modelPath)
 	if err != nil {
@@ -74,8 +75,6 @@ func createOvmsModelRepositoryFromDirectory(files []os.FileInfo, modelPath, sche
 	// allow the directory to contain version directories
 	// try to find the largest version directory
 
-	// TODO: Don't add version for mediapipe_graph format (might be temporary)
-
 	versionNumber := largestNumberDir(files)
 	if versionNumber != "" {
 		// found a version directory so step into it
@@ -83,8 +82,6 @@ func createOvmsModelRepositoryFromDirectory(files []os.FileInfo, modelPath, sche
 			log.Error(err, "Unable to securely join", "modelPath", modelPath, "versionNumber", versionNumber)
 			return err
 		}
-	} else {
-		versionNumber = "1"
 	}
 
 	return createOvmsModelRepositoryFromPath(modelPath, versionNumber, schemaPath, modelType, ovmsModelIDDir, log)
@@ -98,17 +95,15 @@ func createOvmsModelRepositoryFromPath(modelPath, versionNumber, schemaPath, mod
 		return fmt.Errorf("Error calling stat on %s: %w", modelPath, err)
 	}
 
-	linkPathComponents := []string{ovmsModelIDDir, versionNumber}
 	if !modelPathInfo.IsDir() {
-		// special case to rename the file for an ONNX model
-		if modelType == "onnx" {
-			linkPathComponents = append(linkPathComponents, onnxModelFilename)
-		} else {
-			linkPathComponents = append(linkPathComponents, modelPathInfo.Name())
-		}
+		return fmt.Errorf("Model path should point to a directory")
 	}
 
-	linkPath, err := util.SecureJoin(linkPathComponents...)
+	linkPath := ovmsModelIDDir
+	if versionNumber != "" {
+		linkPath, err = util.SecureJoin(ovmsModelIDDir, versionNumber)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error joining link path: %w", err)
 	}
