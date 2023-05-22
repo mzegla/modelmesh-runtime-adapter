@@ -423,12 +423,10 @@ func (mm *OvmsModelManager) gatherLoadRequests() map[string]*request {
 					completeRequest(requestMap[req.modelId], codes.Aborted, "Aborting due to subsequent unload request")
 					delete(requestMap, req.modelId)
 				}
+				// Try to delete in both models and mediapipe graphs maps as we don't have modelType for unload request
+				delete(mm.loadedMediapipeGraphsMap, req.modelId)
+				delete(mm.loadedModelsMap, req.modelId)
 
-				if req.modelType == "mediapipe_graph" {
-					delete(mm.loadedMediapipeGraphsMap, req.modelId)
-				} else {
-					delete(mm.loadedModelsMap, req.modelId)
-				}
 				// an Unload does not need to trigger a config reload, we can report
 				// success and will sync state with the model server on the next reload
 				completeRequest(req, codes.OK, "")

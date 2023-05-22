@@ -70,9 +70,6 @@ func createOvmsModelRepositoryFromDirectory(files []os.FileInfo, modelPath, sche
 
 	// allow the directory to contain version directories
 	// try to find the largest version directory
-
-	// TODO: Don't add version for mediapipe_graph format (might be temporary)
-
 	versionNumber := largestNumberDir(files)
 	if versionNumber != "" {
 		// found a version directory so step into it
