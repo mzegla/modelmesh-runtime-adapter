@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/kserve/modelmesh-runtime-adapter/internal/util"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -330,9 +329,8 @@ func (mm *OvmsModelManager) run() {
 			var code codes.Code
 			var message string
 			if !statusExists {
-				code = codes.OK
-				//code = codes.Internal
-				//message = "Expected model to load, but no status entry found in the config"
+				code = codes.Internal
+				message = "Expected model to load, but no status entry found in the config"
 			} else if modelStatus.State == "AVAILABLE" {
 				code = codes.OK
 			} else {
@@ -455,12 +453,9 @@ func (mm *OvmsModelManager) gatherLoadRequests() map[string]*request {
 
 				requestMap[req.modelId] = req
 				if req.modelType == "mediapipe_graph" {
-					graphPath, _ := util.SecureJoin(req.basePath, "graph.pbtxt")
-					subconfigPath, _ := util.SecureJoin(req.basePath, "config.json")
 					mm.loadedMediapipeGraphsMap[req.modelId] = OvmsMediapipeConfigListEntry{
-						Name:      req.modelId,
-						GraphPath: graphPath,
-						Subconfig: subconfigPath,
+						Name:     req.modelId,
+						BasePath: req.basePath,
 					}
 				} else {
 					mm.loadedModelsMap[req.modelId] = OvmsMultiModelConfigListEntry{
@@ -609,22 +604,18 @@ func (mm *OvmsModelManager) updateModelConfig() error {
 
 		return nil
 	}
+	// Config reload failed, try to figure out why
+	// The response will not include the model statuses, but we can query
+	// for the config separately to get details on the failing models
+	var errorResponse OvmsConfigErrorResponse
+	if err = json.Unmarshal(body, &errorResponse); err != nil {
+		const msg string = "Error parsing /config/reload error response"
+		mm.log.V(1).Error(err, msg, "responseBody", string(body))
+		return fmt.Errorf("%s: %w", msg, err)
+	}
 
-	return nil
-	/*
-		// Config reload failed, try to figure out why
-		// The response will not include the model statuses, but we can query
-		// for the config separately to get details on the failing models
-		var errorResponse OvmsConfigErrorResponse
-		if err = json.Unmarshal(body, &errorResponse); err != nil {
-			const msg string = "Error parsing /config/reload error response"
-			mm.log.V(1).Error(err, msg, "responseBody", string(body))
-			return fmt.Errorf("%s: %w", msg, err)
-		}
+	mm.log.Error(fmt.Errorf("Error response when reloading the config: %s", errorResponse.Error), "Call to /v1/config/reload returned an error", "code", resp.StatusCode)
 
-		mm.log.Error(fmt.Errorf("Error response when reloading the config: %s", errorResponse.Error), "Call to /v1/config/reload returned an error", "code", resp.StatusCode)
-
-		// we rely on the fact that getConfig updates cachedModelConfigResponse
-		return mm.getConfig(ctx)
-	*/
+	// we rely on the fact that getConfig updates cachedModelConfigResponse
+	return mm.getConfig(ctx)
 }

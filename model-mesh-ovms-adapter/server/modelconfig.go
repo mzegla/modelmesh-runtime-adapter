@@ -74,9 +74,8 @@ type OvmsMultiModelConfigListEntry struct {
 // }
 
 type OvmsMediapipeConfigListEntry struct {
-	Name      string `json:"name"`
-	GraphPath string `json:"graph_path"`
-	Subconfig string `json:"subconfig"`
+	Name     string `json:"name"`
+	BasePath string `json:"base_path"`
 }
 
 // Types defining the REST response containing the model config
