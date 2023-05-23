@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -120,13 +121,15 @@ func (s *OvmsAdapterServer) LoadModel(ctx context.Context, req *mmesh.LoadModelR
 		return nil, status.Errorf(status.Code(err), "Failed to load Model due to adapter error: %s", err)
 	}
 
-	adaptedModelPath, err := util.SecureJoin(s.AdapterConfig.RootModelDir, req.ModelId)
+	adaptedModelPath := filepath.Join(s.AdapterConfig.RootModelDir, req.ModelId)
+	log.Info("Sum paths", "RootModelDir", s.AdapterConfig.RootModelDir, "ModelId", req.ModelId, "adapterModelPath", adaptedModelPath)
+
 	if err != nil {
 		log.Error(err, "Unable to securely join", "rootModelDir", rootModelDir, "modelID", req.ModelId)
 		return nil, err
 	}
 
-	loadErr := s.ModelManager.LoadModel(ctx, adaptedModelPath, req.ModelId)
+	loadErr := s.ModelManager.LoadModel(ctx, adaptedModelPath, req.ModelId, modelType)
 	if loadErr != nil {
 		log.Error(loadErr, "OVMS failed to load model")
 		return nil, status.Errorf(status.Code(loadErr), "Failed to load model due to error: %s", loadErr)

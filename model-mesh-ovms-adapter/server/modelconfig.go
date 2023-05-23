@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +14,43 @@
 package server
 
 // Types defining the structure of the OVMS Multi-Model config file
+//
+// Doc: https://github.com/openvinotoolkit/model_server/blob/main/docs/multiple_models_mode.md
+// JSON Schema: https://github.com/openvinotoolkit/model_server/blob/eab97207fbe9078f83a3f85b468418555b02959a/src/schema.cpp#L28
+//
+// EXAMPLE:
+//
+//	{
+//	  "model_config_list": [
+//	    {
+//	      "config": {
+//	        "name": "model_name1",
+//	        "base_path": "/models/model1"
+//	      }
+//	    },
+//	    {
+//	      "config": {
+//	        "name": "model_name2",
+//	        "base_path": "/models/model1"
+//	      }
+//	    }
+//	  ]
+//	}
+type OvmsMultiModelRepositoryConfig struct {
+	ModelConfigList     []OvmsMultiModelConfigListEntry `json:"model_config_list"`
+	MediapipeConfigList []OvmsMediapipeConfigListEntry  `json:"mediapipe_config_list"`
+}
+
+type OvmsMultiModelModelConfig struct {
+	Name     string `json:"name"`
+	BasePath string `json:"base_path"`
+}
+
+type OvmsMultiModelConfigListEntry struct {
+	Config OvmsMultiModelModelConfig `json:"config"`
+}
+
+// Types defining the structure of the OVMS Multi-Model config file // TODO: update with mediapipe docs and example
 //
 // Doc: https://github.com/openvinotoolkit/model_server/blob/main/docs/multiple_models_mode.md
 // JSON Schema: https://github.com/openvinotoolkit/model_server/blob/eab97207fbe9078f83a3f85b468418555b02959a/src/schema.cpp#L28
@@ -35,17 +72,10 @@ package server
 //     }
 //   ]
 // }
-type OvmsMultiModelRepositoryConfig struct {
-	ModelConfigList []OvmsMultiModelConfigListEntry `json:"model_config_list"`
-}
 
-type OvmsMultiModelModelConfig struct {
+type OvmsMediapipeConfigListEntry struct {
 	Name     string `json:"name"`
 	BasePath string `json:"base_path"`
-}
-
-type OvmsMultiModelConfigListEntry struct {
-	Config OvmsMultiModelModelConfig `json:"config"`
 }
 
 // Types defining the REST response containing the model config

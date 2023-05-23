@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,9 +39,6 @@ func adaptModelLayoutForRuntime(ctx context.Context, rootModelDir, modelID, mode
 	// clean up and then create directory where the rewritten model repo will live
 	if removeErr := os.RemoveAll(ovmsModelIDDir); removeErr != nil {
 		log.Info("Ignoring error trying to remove dir", "Directory", ovmsModelIDDir, "Error", removeErr)
-	}
-	if mkdirErr := os.MkdirAll(ovmsModelIDDir, 0755); mkdirErr != nil {
-		return fmt.Errorf("Error creating directories for path %s: %w", ovmsModelIDDir, mkdirErr)
 	}
 
 	modelPathInfo, err := os.Stat(modelPath)
@@ -80,8 +77,6 @@ func createOvmsModelRepositoryFromDirectory(files []os.FileInfo, modelPath, sche
 			log.Error(err, "Unable to securely join", "modelPath", modelPath, "versionNumber", versionNumber)
 			return err
 		}
-	} else {
-		versionNumber = "1"
 	}
 
 	return createOvmsModelRepositoryFromPath(modelPath, versionNumber, schemaPath, modelType, ovmsModelIDDir, log)
@@ -94,18 +89,15 @@ func createOvmsModelRepositoryFromPath(modelPath, versionNumber, schemaPath, mod
 	if err != nil {
 		return fmt.Errorf("Error calling stat on %s: %w", modelPath, err)
 	}
-
-	linkPathComponents := []string{ovmsModelIDDir, versionNumber}
 	if !modelPathInfo.IsDir() {
-		// special case to rename the file for an ONNX model
-		if modelType == "onnx" {
-			linkPathComponents = append(linkPathComponents, onnxModelFilename)
-		} else {
-			linkPathComponents = append(linkPathComponents, modelPathInfo.Name())
-		}
+		return fmt.Errorf("Model path should point to a directory")
 	}
 
-	linkPath, err := util.SecureJoin(linkPathComponents...)
+	linkPath := ovmsModelIDDir
+	if versionNumber != "" {
+		linkPath, err = util.SecureJoin(ovmsModelIDDir, versionNumber)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error joining link path: %w", err)
 	}
